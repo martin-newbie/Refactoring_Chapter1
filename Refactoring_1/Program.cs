@@ -13,19 +13,45 @@ namespace Refactoring_1
     {
         public static string Statement(Invoice invoice, Dictionary<string, Play> plays)
         {
-            var totalAmount = 0;
-            var volumeCredits = 0;
-            var result = $"청구 내역 {invoice.customer}\n";
-            
             Play PlayFor(Performances performance)
             {
                 return plays[performance.playID];
             }
+            int AmountFor(Performances performance)
+            {
+                int result;
+                switch (PlayFor(performance).type)
+                {
+                    case PlayType.tragedy:
+                        result = 40000;
+                        if (performance.audience > 30)
+                        {
+                            result += 1000 * (performance.audience - 30);
+                        }
+                        break;
+                    case PlayType.comedy:
+                        result = 30000;
+                        if (performance.audience > 20)
+                        {
+                            result += 10000 + 500 * (performance.audience - 20);
+                        }
+                        result += 300 * performance.audience;
+                        break;
+                    default:
+                        throw new Exception($"알 수 없는 장르: {PlayFor(performance).type}");
+                }
 
+                return result;
+            }
+
+            var totalAmount = 0;
+            var volumeCredits = 0;
+            var result = $"청구 내역 {invoice.customer}\n";
+            
             foreach (var perf in invoice.performances)
             {
                 var thisAmount = 0;
-                thisAmount = AmountFor(perf, PlayFor(perf));
+                thisAmount = AmountFor(perf);
 
                 volumeCredits += Math.Max(perf.audience - 30, 0);
 
@@ -37,33 +63,6 @@ namespace Refactoring_1
 
             result += $"총액: {format(totalAmount / 100)}\n";
             result += $"적립 포인트: {volumeCredits}점\n";
-            return result;
-        }
-
-        private static int AmountFor(Performances performance, Play play)
-        {
-            int result;
-            switch (play.type)
-            {
-                case PlayType.tragedy:
-                    result = 40000;
-                    if (performance.audience > 30)
-                    {
-                        result += 1000 * (performance.audience - 30);
-                    }
-                    break;
-                case PlayType.comedy:
-                    result = 30000;
-                    if (performance.audience > 20)
-                    {
-                        result += 10000 + 500 * (performance.audience - 20);
-                    }
-                    result += 300 * performance.audience;
-                    break;
-                default:
-                    throw new Exception($"알 수 없는 장르: {play.type}");
-            }
-
             return result;
         }
 
