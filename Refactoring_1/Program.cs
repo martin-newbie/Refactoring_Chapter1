@@ -50,22 +50,39 @@ namespace Refactoring_1
                 if (PlayFor(performance).type == PlayType.comedy) result += (int)MathF.Floor(performance.audience / 5);
                 return result;
             }
-
-            var totalAmount = 0;
-            var volumeCredits = 0;
-            var result = $"청구 내역 {invoice.customer}\n";
-            
-            foreach (var perf in invoice.performances)
+            int TotalVolumeCredit()
             {
-                volumeCredits += VolumeCreditFor(perf);
-                result += $"{PlayFor(perf).name}: {USD(AmountFor(perf))} ({perf.audience}석)\n";
-                totalAmount += AmountFor(perf);
+                var volumeCredits = 0;
+                foreach (var perf in invoice.performances)
+                {
+                    volumeCredits += VolumeCreditFor(perf);
+                }
+
+                return volumeCredits;
+            }
+            int TotalAmount(Invoice invoice, Dictionary<string, Play> plays)
+            {
+                var totalAmount = 0;
+                foreach (var perf in invoice.performances)
+                {
+                    totalAmount += AmountFor(perf);
+                }
+
+                return totalAmount;
             }
 
-            result += $"총액: {USD(totalAmount)}\n";
-            result += $"적립 포인트: {volumeCredits}점\n";
-            return result;
+            var result = $"청구 내역 {invoice.customer}\n";
 
+            foreach (var perf in invoice.performances)
+            {
+                result += $"{PlayFor(perf).name}: {USD(AmountFor(perf))} ({perf.audience}석)\n";
+            }
+
+            int totalAmount = TotalAmount(invoice, plays);
+
+            result += $"총액: {USD(totalAmount)}\n";
+            result += $"적립 포인트: {TotalVolumeCredit()}점\n";
+            return result;
 
         }
 
