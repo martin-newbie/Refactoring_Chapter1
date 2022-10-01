@@ -43,6 +43,13 @@ namespace Refactoring_1
 
                 return result;
             }
+            int VolumeCreditFor(Performances performance)
+            {
+                var result = Math.Max(performance.audience - 30, 0);
+
+                if (PlayFor(performance).type == PlayType.comedy) result += (int)MathF.Floor(performance.audience / 5);
+                return result;
+            }
 
             var totalAmount = 0;
             var volumeCredits = 0;
@@ -50,20 +57,16 @@ namespace Refactoring_1
             
             foreach (var perf in invoice.performances)
             {
-                var thisAmount = 0;
-                thisAmount = AmountFor(perf);
-
-                volumeCredits += Math.Max(perf.audience - 30, 0);
-
-                if (PlayFor(perf).type == PlayType.comedy) volumeCredits += (int)MathF.Floor(perf.audience / 5);
-
-                result += $"{PlayFor(perf).name}: {format(thisAmount / 100)} ({perf.audience}석)\n";
-                totalAmount += thisAmount;
+                volumeCredits += VolumeCreditFor(perf);
+                result += $"{PlayFor(perf).name}: {format(AmountFor(perf) / 100)} ({perf.audience}석)\n";
+                totalAmount += AmountFor(perf);
             }
 
             result += $"총액: {format(totalAmount / 100)}\n";
             result += $"적립 포인트: {volumeCredits}점\n";
             return result;
+
+
         }
 
         public static string format(float arg)
