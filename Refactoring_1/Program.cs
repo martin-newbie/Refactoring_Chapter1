@@ -58,20 +58,20 @@ namespace Refactoring_1
             foreach (var perf in invoice.performances)
             {
                 volumeCredits += VolumeCreditFor(perf);
-                result += $"{PlayFor(perf).name}: {format(AmountFor(perf) / 100)} ({perf.audience}석)\n";
+                result += $"{PlayFor(perf).name}: {USD(AmountFor(perf))} ({perf.audience}석)\n";
                 totalAmount += AmountFor(perf);
             }
 
-            result += $"총액: {format(totalAmount / 100)}\n";
+            result += $"총액: {USD(totalAmount)}\n";
             result += $"적립 포인트: {volumeCredits}점\n";
             return result;
 
 
         }
 
-        public static string format(float arg)
+        public static string USD(float arg)
         {
-            return string.Format("${0:0.00}", arg);
+            return string.Format("${0:0,0.00}", arg / 100);
         }
 
         static void Main(string[] args)
