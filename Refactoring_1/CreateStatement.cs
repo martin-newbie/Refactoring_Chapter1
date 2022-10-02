@@ -10,13 +10,11 @@ namespace Refactoring_1
         public Performances performance;
         public Play play;
         public virtual int amount { get; }
-        public int volumeCredits
+        public virtual int volumeCredits
         {
             get
             {
                 var result = Math.Max(performance.audience - 30, 0);
-
-                if (play.type == PlayType.comedy) result += (int)MathF.Floor(performance.audience / 5);
                 return result;
             }
         }
@@ -64,6 +62,7 @@ namespace Refactoring_1
                 return result;
             }
         }
+        public override int volumeCredits => base.volumeCredits + (int)MathF.Floor(performance.audience / 5);
 
         public ComedyCalculator(Performances performance, Play play) : base(performance, play)
         {
@@ -110,17 +109,6 @@ namespace Refactoring_1
             Play PlayFor(Performances performance)
             {
                 return plays[performance.playID];
-            }
-            int AmountFor(Performances performance)
-            {// todo 없어도 될 것 같음
-                return new PerformanceCalculator(performance, PlayFor(performance)).amount;
-            }
-            int VolumeCreditFor(Performances performance)
-            {
-                var result = Math.Max(performance.audience - 30, 0);
-
-                if (performance.play.type == PlayType.comedy) result += (int)MathF.Floor(performance.audience / 5);
-                return result;
             }
             int TotalAmount(Invoice data)
             {
