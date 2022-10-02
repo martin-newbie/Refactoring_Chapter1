@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Refactoring_1
 {
@@ -14,14 +15,22 @@ namespace Refactoring_1
         public static string Statement(Invoice invoice, Dictionary<string, Play> plays)
         {
             Invoice statementData = new Invoice();
-            
-            statementData.customer = invoice.customer;
-            statementData.performances = invoice.performances;
 
-            return RenderPlainText(statementData, plays);
-        }
-        static string RenderPlainText(Invoice data, Dictionary<string, Play> plays)
-        {
+            statementData.customer = invoice.customer;
+            statementData.performances = invoice.performances.Select(EnrichPerformance).ToList();
+            statementData.totalAmount = TotalAmount(statementData);
+            statementData.totalVolumeCredits = TotalVolumeCredit(statementData);
+
+            return RenderPlainText(statementData);
+
+            Performances EnrichPerformance(Performances performances)
+            {
+                var result = performances.Clone();
+                result.play = PlayFor(result);
+                result.amount = AmountFor(result);
+                result.volumeCredits = VolumeCreditFor(result);
+                return result;
+            }
             Play PlayFor(Performances performance)
             {
                 return plays[performance.playID];
@@ -56,41 +65,30 @@ namespace Refactoring_1
             {
                 var result = Math.Max(performance.audience - 30, 0);
 
-                if (PlayFor(performance).type == PlayType.comedy) result += (int)MathF.Floor(performance.audience / 5);
+                if (performance.play.type == PlayType.comedy) result += (int)MathF.Floor(performance.audience / 5);
                 return result;
             }
-            int TotalVolumeCredit()
+            int TotalAmount(Invoice data)
             {
-                var volumeCredits = 0;
-                foreach (var perf in data.performances)
-                {
-                    volumeCredits += VolumeCreditFor(perf);
-                }
-
-                return volumeCredits;
+                return data.performances.Aggregate(0, (total, p) => total + p.amount);
             }
-            int TotalAmount(Invoice invoice, Dictionary<string, Play> plays)
+            int TotalVolumeCredit(Invoice data)
             {
-                var totalAmount = 0;
-                foreach (var perf in invoice.performances)
-                {
-                    totalAmount += AmountFor(perf);
-                }
-
-                return totalAmount;
+                return data.performances.Aggregate(0, (total, p) => total + p.volumeCredits);
             }
+        }
 
+        static string RenderPlainText(Invoice data)
+        {
             var result = $"청구 내역 {data.customer}\n";
 
             foreach (var perf in data.performances)
             {
-                result += $"{PlayFor(perf).name}: {USD(AmountFor(perf))} ({perf.audience}석)\n";
+                result += $"{perf.play.name}: {USD(perf.amount)} ({perf.audience}석)\n";
             }
 
-            int totalAmount = TotalAmount(data, plays);
-
-            result += $"총액: {USD(totalAmount)}\n";
-            result += $"적립 포인트: {TotalVolumeCredit()}점\n";
+            result += $"총액: {USD(data.totalAmount)}\n";
+            result += $"적립 포인트: {data.totalVolumeCredits}점\n";
             return result;
         }
 
@@ -133,6 +131,9 @@ namespace Refactoring_1
         public string customer;
         public List<Performances> performances = new List<Performances>();
 
+        public int totalAmount;
+        public int totalVolumeCredits;
+
         public Invoice(string customer, List<Performances> performances)
         {
             this.customer = customer;
@@ -149,11 +150,19 @@ namespace Refactoring_1
     {
         public string playID;
         public int audience;
+        public int amount;
+        public int volumeCredits;
+        public Play play;
 
         public Performances(string playID, int audience)
         {
             this.playID = playID;
             this.audience = audience;
+        }
+
+        internal Performances Clone()
+        {
+            return new Performances(this.playID, this.audience);
         }
     }
 
