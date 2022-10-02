@@ -5,36 +5,16 @@ using System.Linq;
 
 namespace Refactoring_1
 {
-    class CreateStatement
+    public class PerformanceCalculator
     {
-        
-        public static Invoice CreateStatementData(Invoice invoice, Dictionary<string, Play> plays)
+        public Performances performance;
+        public Play play;
+        public int amount
         {
-            Invoice statementData = new Invoice();
-
-            statementData.customer = invoice.customer;
-            statementData.performances = invoice.performances.Select(EnrichPerformance).ToList();
-            statementData.totalAmount = TotalAmount(statementData);
-            statementData.totalVolumeCredits = TotalVolumeCredit(statementData);
-
-            return statementData;
-
-            Performances EnrichPerformance(Performances performances)
-            {
-                var result = performances.Clone();
-                result.play = PlayFor(result);
-                result.amount = AmountFor(result);
-                result.volumeCredits = VolumeCreditFor(result);
-                return result;
-            }
-            Play PlayFor(Performances performance)
-            {
-                return plays[performance.playID];
-            }
-            int AmountFor(Performances performance)
+            get
             {
                 int result;
-                switch (PlayFor(performance).type)
+                switch (this.play.type)
                 {
                     case PlayType.tragedy:
                         result = 40000;
@@ -52,10 +32,62 @@ namespace Refactoring_1
                         result += 300 * performance.audience;
                         break;
                     default:
-                        throw new Exception($"알 수 없는 장르: {PlayFor(performance).type}");
+                        throw new Exception($"알 수 없는 장르: {this.play.type}");
                 }
 
                 return result;
+            }
+        }
+        public int volumeCredits
+        {
+            get
+            {
+                var result = Math.Max(performance.audience - 30, 0);
+
+                if (play.type == PlayType.comedy) result += (int)MathF.Floor(performance.audience / 5);
+                return result;
+            }
+        }
+
+        public PerformanceCalculator(Performances performance, Play play)
+        {
+            this.performance = performance;
+            this.play = play;
+        }
+    }
+
+    class CreateStatement
+    {
+        
+        public static Invoice CreateStatementData(Invoice invoice, Dictionary<string, Play> plays)
+        {
+            Invoice statementData = new Invoice();
+
+            
+            statementData.customer = invoice.customer;
+            statementData.performances = invoice.performances.Select(EnrichPerformance).ToList();
+            statementData.totalAmount = TotalAmount(statementData);
+            statementData.totalVolumeCredits = TotalVolumeCredit(statementData);
+
+            return statementData;
+
+            Performances EnrichPerformance(Performances performances)
+            {
+                PerformanceCalculator calculator = new PerformanceCalculator(performances, PlayFor(performances));
+                var result = performances.Clone();
+
+                result.play = calculator.play;
+                result.amount = calculator.amount;
+                result.volumeCredits = calculator.volumeCredits;
+                return result;
+            }
+            Play PlayFor(Performances performance)
+            {
+                return plays[performance.playID];
+            }
+            int AmountFor(Performances performance)
+            {// todo 없어도 될 것 같음
+                return new PerformanceCalculator(performance, PlayFor(performance)).amount;
             }
             int VolumeCreditFor(Performances performance)
             {
