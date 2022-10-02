@@ -13,6 +13,12 @@ namespace Refactoring_1
     {
         public static string Statement(Invoice invoice, Dictionary<string, Play> plays)
         {
+            return RenderPlainText(invoice, plays);
+
+            
+        }
+        static string RenderPlainText(Invoice invoice, Dictionary<string, Play> plays)
+        {
             Play PlayFor(Performances performance)
             {
                 return plays[performance.playID];
@@ -83,7 +89,6 @@ namespace Refactoring_1
             result += $"총액: {USD(totalAmount)}\n";
             result += $"적립 포인트: {TotalVolumeCredit()}점\n";
             return result;
-
         }
 
         public static string USD(float arg)
