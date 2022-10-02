@@ -13,11 +13,14 @@ namespace Refactoring_1
     {
         public static string Statement(Invoice invoice, Dictionary<string, Play> plays)
         {
-            return RenderPlainText(invoice, plays);
-
+            Invoice statementData = new Invoice();
             
+            statementData.customer = invoice.customer;
+            statementData.performances = invoice.performances;
+
+            return RenderPlainText(statementData, plays);
         }
-        static string RenderPlainText(Invoice invoice, Dictionary<string, Play> plays)
+        static string RenderPlainText(Invoice data, Dictionary<string, Play> plays)
         {
             Play PlayFor(Performances performance)
             {
@@ -59,7 +62,7 @@ namespace Refactoring_1
             int TotalVolumeCredit()
             {
                 var volumeCredits = 0;
-                foreach (var perf in invoice.performances)
+                foreach (var perf in data.performances)
                 {
                     volumeCredits += VolumeCreditFor(perf);
                 }
@@ -77,14 +80,14 @@ namespace Refactoring_1
                 return totalAmount;
             }
 
-            var result = $"청구 내역 {invoice.customer}\n";
+            var result = $"청구 내역 {data.customer}\n";
 
-            foreach (var perf in invoice.performances)
+            foreach (var perf in data.performances)
             {
                 result += $"{PlayFor(perf).name}: {USD(AmountFor(perf))} ({perf.audience}석)\n";
             }
 
-            int totalAmount = TotalAmount(invoice, plays);
+            int totalAmount = TotalAmount(data, plays);
 
             result += $"총액: {USD(totalAmount)}\n";
             result += $"적립 포인트: {TotalVolumeCredit()}점\n";
@@ -134,6 +137,11 @@ namespace Refactoring_1
         {
             this.customer = customer;
             this.performances = performances;
+        }
+
+        public Invoice()
+        {
+
         }
     }
 
